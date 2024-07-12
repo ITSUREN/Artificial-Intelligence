@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include "./Modules/8PuzzleModules.c"
+#include "../Modules/8PuzzleModules.c"
 
 #define MAXNODES 1000
 #define HorizontalRule 30
