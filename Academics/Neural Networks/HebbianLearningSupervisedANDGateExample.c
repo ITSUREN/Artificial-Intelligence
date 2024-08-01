@@ -201,11 +201,6 @@ void training(network *ANN, trainingData trainingDatas) {
 int main() {
     system("clear");
     int activationFunctionType = 2;
-    float layer1Weights[MAXSIZE][MAXSIZE] = {
-        {0}, 
-        {0},
-        {0} // For bias weight
-    };
     // training Datas
     trainingData trainingDatas;
     int trainingDataSize=4, trainingInputSize=2, epochs=3;
@@ -221,7 +216,13 @@ int main() {
     ANN.layers[0].layerSize = trainingInputSize+1; // For bias
     ANN.layers[1].layerSize = 1;
     networkInitializer(&ANN); // Gives names to the layers and nodes.
-    weightSetterLayerWise(&ANN, 1, layer1Weights); // Set Initial Weights of all to 0
+
+    // Setting Initial Weight of all to 0
+    float InitialWeights[MAXSIZE][MAXSIZE];
+    for (int i = 0; i < ANN.layers[0].layerSize; i++) {
+        InitialWeights[i][0]=0;
+    }
+    weightSetterLayerWise(&ANN, 1, InitialWeights);
 
     // Train the Network
     training(&ANN, trainingDatas);
