@@ -3,3 +3,4 @@
 #To ingnore the harvard class recordings
 /Classes
 .vscode
+/venv
