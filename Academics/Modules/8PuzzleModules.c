@@ -62,24 +62,26 @@ void inputBoard(gameState *State, char *Index) {
             if ((Locator >= 0) && (Locator <= 8)) {
                 if (verifiedNumberHashTable[Locator]==1) {
                     tableCollision=1;
-                    printf("\n\t[ERR 02] Table Collided at %d\n", State->Board[i][j]);
+                    system("clear");
+                    printf(">>>[ERR 012] Table Collided at %d\n", State->Board[i][j]);
                     inputBoard(State, Index);
                 } else {
                     verifiedNumberHashTable[Locator]=1;
                 }
             } else {
-                printf("\n\t[ERR 01] Value out of range (0-8)\n");
+                system("clear");
+                printf(">>>[ERR 011] Value out of range (0-8)\n");
                 inputBoard(State, Index);
             }
             if (Locator == 0) {
-                printf("\n\tBlank Noted.\n");
+                printf("\tBlank Noted.\n");
                 blank=1;
                 State->Blank.x = i; State->Blank.y=j;
             }
         }
     } 
     if (!blank) {
-        printf("\n\t[ERR 03] No Blanks Found... (Denoted by 0 as input)\n");
+        printf("\n>>>[ERR 023] No Blanks Found... (Denoted by 0 as input)\n");
         inputBoard(State, Index);
     }
 }
