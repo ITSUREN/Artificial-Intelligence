@@ -2,19 +2,79 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <unistd.h>
 #include "../Modules/8PuzzleModules.c"
 
-#define MAXNODES 1000
-#define HorizontalRule 30
+#define MAXNODES 900
+#define HorizontalRule 45
 
-typedef struct Node {
+// Forward declaration of the structure
+typedef struct queueNode queueNode;
+
+typedef struct queueNode {
     gameState State;
-    struct Node *Previous;
+    queueNode *Previous;
     const char *Move; // Track the move made to reach this state
     int Depth;
 } queueNode;
 
-int Front = 0, Rear = 0, vIndex = 0;
+int Front = 0, Rear = -1, vIndex = 0;
+
+void printHorizontalRule(){
+    printf("\n");
+    for (int i=0; i < HorizontalRule; i++) {
+        printf("[]");
+    };
+}
+
+int isQueueEmpty(queueNode Queue[]) {
+    if (Front > Rear) {
+        Front = 0;Rear = -1;
+        printf("\n>>>[ERR 111] Queue Empty");
+        return 1;
+    }
+    return 0;
+}
+
+int isQueueFull(queueNode Queue[]) {
+    if ((Rear - Front +1) == MAXNODES) {
+        printf("\n>>>[ERR 112] Queue Full");
+        return 1;
+    }
+    return 0;
+}
+
+int isVisitedFull(queueNode Queue[]) {
+    return vIndex==MAXNODES-1;
+}
+
+int pushVisited(queueNode Visited[], queueNode visitedNode) {
+    if(!isVisitedFull(Visited)) {
+        memcpy(&Visited[vIndex], &visitedNode, sizeof(visitedNode));
+        ++vIndex;
+        return 1;
+    } 
+    printf("\n>>>[ERR 121] Visited list Full");
+    return 0;
+}
+
+int enQueue(queueNode Queue[], queueNode Node) {
+    if (!isQueueFull(Queue)) {
+        ++Rear;
+        int Rear_Conv = Rear%MAXNODES;
+        memcpy(&Queue[Rear_Conv], &Node, sizeof(Node));
+        return 1;
+    }
+    return 0;
+}
+
+int deQueue(queueNode Queue[])  {
+    if(!isQueueEmpty(Queue)) {
+        ++Front;
+        return 1;
+    }
+    return 0;
+}
 
 int isVisited(gameState Current, queueNode Visited[MAXNODES]) {
     for (int i = 0; i < vIndex; i++) {
@@ -29,39 +89,72 @@ void backtrace(queueNode *node) {
     if (node == NULL) return;
     backtrace(node->Previous);
     char formatString[50]; // Adjust size as needed
-    sprintf(formatString, "Depth %d [Move %s]", node->Depth, node->Move);
+    sprintf(formatString, "Step %d [Move %s]", node->Depth, node->Move);
     printBoard(node->State, formatString); // Pass formatted string to printBoard
+}
+
+void printProgressBar(int Value1, int MAX1, int Value2, int MAX2) {
+    printf("\r");   // Carriage return to go back to the start of the line
+    int width = 20;
+    int percentage1 = Value1*100/MAX1,percentage2 = Value2*100/MAX2;
+    int pos1 = (percentage1 * width)/100; 
+    int pos2 = (percentage2 * width)/100;
+    printf("     STATUS: Queue: ["); 
+    for (int i = 0; i < width; i++) {
+        if (i < pos1)
+            printf("#");
+        else
+            printf(" ");
+    }
+    printf("] %d", Value1); 
+    printf("    Visited: ["); 
+    for (int i = 0; i < width; i++) {
+        if (i < pos2)
+            printf("#");
+        else
+            printf(" ");
+    }
+    printf("] %d", Value2); 
+    fflush(stdout); // Flush th1e output to ensure it prints immediately
+    usleep(10000);
 }
 
 void solvePuzzle(gameState Initial, gameState Goal) {
     queueNode Queue[MAXNODES];
     queueNode Visited[MAXNODES]; // array
+    queueNode Node;
+    queueNode visitedNode;
 
     // Enqueue Initial State
-    Queue[Rear].State = Initial;
-    Queue[Rear].Previous = NULL;
-    Queue[Rear].Depth = 0;
-    Queue[Rear].Move = "Initial State Inclusion"; // Initial state has no move
-    Rear++;
+    Node.State = Initial;
+    Node.Previous = NULL;
+    Node.Depth = 0;
+    Node.Move = "Initial State Inclusion"; // Initial state has no move
+    enQueue(Queue, Node);
 
     // Iteration over Queue
-    while (Front < Rear && Rear < MAXNODES) { // Added condition to avoid overflow
+    printf("\n");
+    while (!isQueueFull(Queue) && !isVisitedFull(Visited)) { // Added condition to avoid overflow
+        printProgressBar(Rear-Front+1, MAXNODES, vIndex, MAXNODES);
         // Dequeue from the Queue
         gameState Current = Queue[Front].State;
-        Visited[vIndex].State = Current;
-        Visited[vIndex].Previous = Queue[Front].Previous;
-        Visited[vIndex].Depth = Queue[Front].Depth;
-        Visited[vIndex].Move = Queue[Front].Move;
+        if(!isVisited(Current, Visited)) {
+            visitedNode.State = Current;
+            visitedNode.Previous = Queue[Front].Previous;
+            visitedNode.Depth = Queue[Front].Depth;
+            visitedNode.Move = Queue[Front].Move;
+            pushVisited(Visited,visitedNode);
+        }
 
         int Depth = Queue[Front].Depth;
-        Front++;
-        vIndex++; // Dequeue operation
+        deQueue(Queue);
 
         // Check if current state is the goal state
         if (isSameState(Current, Goal)) {
-            printf("\nBacktrace Path:\n");
-            backtrace(&Visited[vIndex - 1]);
-            printf("\nSolution Found at depth %d\n\n", Depth);
+            printHorizontalRule();
+            printf("\nBacktraced Path:\n");
+            backtrace(&Visited[vIndex-1]);
+            printf("\nSolution Found at step %d\n\n", Depth);
             return;
         }
 
@@ -85,32 +178,38 @@ void solvePuzzle(gameState Initial, gameState Goal) {
 
                 // Check if the state has been visited
                 if (!isVisited(newState, Visited)) {
-                    Queue[Rear].State = newState;
-                    Queue[Rear].Depth = Depth + 1;
-                    Queue[Rear].Previous = &Visited[vIndex - 1];
-                    Queue[Rear].Move = moves[i]; // Track the move
-                    Rear++;
+                    Node.State = newState;
+                    Node.Depth = Depth + 1;
+                    Node.Previous = &Visited[vIndex - 1];
+                    Node.Move = moves[i]; // Track the move
+                    enQueue(Queue, Node);
                 }
             }
         }
     }
     // No solution found within limits
-    printf("\nSolution Not Found within Limits.\n\n");
+    printf("\n>>>[ERR 1XX] Solution Not Found within Step Limits.\n\n");
 }
 
 int main() {
     system("clear");
     gameState Initial, Goal;
+
+    // Inputs
     inputBoard(&Initial, "Initial");
     system("clear");
     printBoard(Initial, "Initial");
     inputBoard(&Goal, "Goal");
     system("clear");
+
+    // Print Initial and Goal
     printBoard(Initial, "Initial");
     printBoard(Goal, "Goal");
-    for (int i=0; i < HorizontalRule; i++) {
-        printf("[]");
-    };
+
+    //Solve
+    printHorizontalRule();
+    
     solvePuzzle(Initial, Goal);
     return 0;
 }
+
