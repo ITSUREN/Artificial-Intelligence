@@ -68,17 +68,16 @@ int enQueue(queueNode Queue[], queueNode Node) {
     return 0;
 }
 
-int deQueue(queueNode Queue[])  {
+queueNode deQueue(queueNode Queue[])  {
     if(!isQueueEmpty(Queue)) {
         ++Front;
-        return 1;
+        return Queue[Front-1];
     }
-    return 0;
 }
 
-int isVisited(gameState Current, queueNode Visited[MAXNODES]) {
+int isVisited(gameState currentState, queueNode Visited[MAXNODES]) {
     for (int i = 0; i < vIndex; i++) {
-        if (isSameState(Current, Visited[i].State)) {
+        if (isSameState(currentState, Visited[i].State)) {
             return 1;
         }
     }
@@ -123,7 +122,6 @@ void solvePuzzle(gameState Initial, gameState Goal) {
     queueNode Queue[MAXNODES];
     queueNode Visited[MAXNODES]; // array
     queueNode Node;
-    queueNode visitedNode;
 
     // Enqueue Initial State
     Node.State = Initial;
@@ -137,20 +135,19 @@ void solvePuzzle(gameState Initial, gameState Goal) {
     while (!isQueueFull(Queue) && !isVisitedFull(Visited)) { // Added condition to avoid overflow
         printProgressBar(Rear-Front+1, MAXNODES, vIndex, MAXNODES);
         // Dequeue from the Queue
-        gameState Current = Queue[Front].State;
-        if(!isVisited(Current, Visited)) {
-            visitedNode.State = Current;
-            visitedNode.Previous = Queue[Front].Previous;
-            visitedNode.Depth = Queue[Front].Depth;
-            visitedNode.Move = Queue[Front].Move;
-            pushVisited(Visited,visitedNode);
+        Node = deQueue(Queue);
+
+        gameState currentState = Node.State;
+
+        // Add to Visited Array
+        if(!isVisited(currentState, Visited)) {
+            pushVisited(Visited,Node);
         }
 
-        int Depth = Queue[Front].Depth;
-        deQueue(Queue);
+        int Depth = Node.Depth;
 
-        // Check if current state is the goal state
-        if (isSameState(Current, Goal)) {
+        // Check if currentState state is the goal state
+        if (isSameState(currentState, Goal)) {
             printHorizontalRule();
             printf("\nBacktraced Path:\n");
             backtrace(&Visited[vIndex-1]);
@@ -159,7 +156,7 @@ void solvePuzzle(gameState Initial, gameState Goal) {
         }
 
         // Find blank position
-        int x = Current.Blank.x, y = Current.Blank.y;
+        int x = currentState.Blank.x, y = currentState.Blank.y;
 
         // Possible Movements: left, right, up, down
         int dy[] = {-1, 1, 0, 0};
@@ -171,10 +168,9 @@ void solvePuzzle(gameState Initial, gameState Goal) {
 
             if (isSafe(newx, newy)) {
                 // Create a new State by moving blanks
-                gameState newState = Current;
+                gameState newState = currentState;
                 Swap(&newState.Board[x][y], &newState.Board[newx][newy]);
-                newState.Blank.x = newx;
-                newState.Blank.y = newy;
+                newState.Blank.x = newx; newState.Blank.y = newy;
 
                 // Check if the state has been visited
                 if (!isVisited(newState, Visited)) {
