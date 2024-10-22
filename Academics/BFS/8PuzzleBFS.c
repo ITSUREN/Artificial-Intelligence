@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include "../Modules/8PuzzleModules.c"
 
-#define MAXNODES 900
+#define MAXNODES 50000
 #define HorizontalRule 45
 
 // Forward declaration of the structure
@@ -84,6 +84,15 @@ int isVisited(gameState currentState, queueNode Visited[MAXNODES]) {
     return 0;
 }
 
+int isInStack(gameState currentState, queueNode Queue[MAXNODES]) {
+    for (int i=Front; i < Rear; i++) {
+        if (isSameState(currentState, Queue[i%MAXNODES].State)) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 void backtrace(queueNode *node) {
     if (node == NULL) return;
     backtrace(node->Previous);
@@ -115,7 +124,7 @@ void printProgressBar(int Value1, int MAX1, int Value2, int MAX2) {
     }
     printf("] %d", Value2); 
     fflush(stdout); // Flush th1e output to ensure it prints immediately
-    usleep(10000);
+    //usleep(100000); LIMITER ENABLE TO WATCH IN SLOW MOTION
 }
 
 void solvePuzzle(gameState Initial, gameState Goal) {
@@ -173,7 +182,7 @@ void solvePuzzle(gameState Initial, gameState Goal) {
                 newState.Blank.x = newx; newState.Blank.y = newy;
 
                 // Check if the state has been visited
-                if (!isVisited(newState, Visited)) {
+                if (!isVisited(newState, Visited) && !isInStack(newState,Queue)) {
                     Node.State = newState;
                     Node.Depth = Depth + 1;
                     Node.Previous = &Visited[vIndex - 1];
