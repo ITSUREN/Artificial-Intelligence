@@ -9,6 +9,16 @@
 		<img alt="Issues" src="https://img.shields.io/github/issues/ITSURENXD/Artificial-Intelligence?style=for-the-badge&logo=gitbook&color=B5E8E0&logoColor=D9E0EE&labelColor=302D41"></a>
 </p>
 &nbsp;
-<p align="center">AI & ML Repository that Contains practices of the algorithms and codes from textbooks and classworks. </p>
+<p align="center">AI & ML Repository containing exercise on the algorithms and codes from textbooks and classworks. </p>
 
 &nbsp;
+
+### 🔱 Exercises on AI & ML
+1. [Wumpus World](./NOTES/Academics/wumpusWorl.md) 
+2. [8 Puzzle Problem](./NOTES/Academics/8PuzzleProblem.md)
+3. [Path Problem](./NOTES/Academics/pathFindingProblem.md)
+4. [Spam Detection](./NOTES/Academics/spamDetection.md), 
+5. [Sentence Parse Tree](./NOTES/Academics/sentenceParseTree.md)
+5. [Block World Problem](./NOTES/Academics/blockWorldHillClimb.md)
+6. [Neural Networks](./NOTES/Academics/neuralNetworks.md)
+7. [Genetic Algorithm](./NOTES/Academics/geneticAlgorithm.md), [etc](./NOTES/Miscellaneous/Miscellaneous.md).
