@@ -5,7 +5,8 @@
 #include <unistd.h>
 #include "../Modules/8PuzzleModules.c"
 
-#define MAXNODES 50000
+// Not many benefits to split queue and visited memory unless the problem has step > ~17 steps
+#define MAXNODES 50000 
 #define HorizontalRule 45
 
 // Forward declaration of the structure
@@ -101,13 +102,13 @@ void backtrace(queueNode *node) {
     printBoard(node->State, formatString); // Pass formatted string to printBoard
 }
 
-void printProgressBar(int Value1, int MAX1, int Value2, int MAX2) {
+void printProgressBar(int Value1, int MAX1, int Value2, int MAX2, int period) {
     printf("\r");   // Carriage return to go back to the start of the line
     int width = 20;
     int percentage1 = Value1*100/MAX1,percentage2 = Value2*100/MAX2;
     int pos1 = (percentage1 * width)/100; 
     int pos2 = (percentage2 * width)/100;
-    printf("     STATUS: Queue: ["); 
+    printf("     STATUS: Stack: ["); 
     for (int i = 0; i < width; i++) {
         if (i < pos1)
             printf("#");
@@ -124,7 +125,7 @@ void printProgressBar(int Value1, int MAX1, int Value2, int MAX2) {
     }
     printf("] %d", Value2); 
     fflush(stdout); // Flush th1e output to ensure it prints immediately
-    //usleep(100000); LIMITER ENABLE TO WATCH IN SLOW MOTION
+    usleep(period);
 }
 
 void solvePuzzle(gameState Initial, gameState Goal) {
@@ -142,7 +143,7 @@ void solvePuzzle(gameState Initial, gameState Goal) {
     // Iteration over Queue
     printf("\n");
     while (!isQueueFull(Queue) && !isVisitedFull(Visited)) { // Added condition to avoid overflow
-        printProgressBar(Rear-Front+1, MAXNODES, vIndex, MAXNODES);
+        printProgressBar(Rear-Front+1, MAXNODES, vIndex, MAXNODES,10000);
         // Dequeue from the Queue
         Node = deQueue(Queue);
 
@@ -165,7 +166,7 @@ void solvePuzzle(gameState Initial, gameState Goal) {
         }
 
         // Find blank position
-        int x = currentState.Blank.x, y = currentState.Blank.y;
+        int x = currentState.Blank.row, y = currentState.Blank.column;
 
         // Possible Movements: left, right, up, down
         int dy[] = {-1, 1, 0, 0};
@@ -179,7 +180,8 @@ void solvePuzzle(gameState Initial, gameState Goal) {
                 // Create a new State by moving blanks
                 gameState newState = currentState;
                 Swap(&newState.Board[x][y], &newState.Board[newx][newy]);
-                newState.Blank.x = newx; newState.Blank.y = newy;
+                newState.Blank.row = newx;
+                newState.Blank.column = newy;
 
                 // Check if the state has been visited
                 if (!isVisited(newState, Visited) && !isInStack(newState,Queue)) {
@@ -217,4 +219,3 @@ int main() {
     solvePuzzle(Initial, Goal);
     return 0;
 }
-
