@@ -23,7 +23,7 @@
 #define TAB 8
 
 typedef struct {
-    int x, y;
+    int row, column;
 } Posix;
 
 // Structure to represent the puzzle state
@@ -76,7 +76,7 @@ void inputBoard(gameState *State, char *Index) {
             if (Locator == 0) {
                 printf("\tBlank Noted.\n");
                 blank=1;
-                State->Blank.x = i; State->Blank.y=j;
+                State->Blank.row = i; State->Blank.column=j;
             }
         }
     } 
@@ -102,7 +102,6 @@ void printBoard(gameState State, char *Index) {
                 printf("-");
             }
             printf("\n");
-        }
-        
+        }      
     }
 }
