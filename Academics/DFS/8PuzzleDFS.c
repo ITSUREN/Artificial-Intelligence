@@ -87,7 +87,7 @@ void backtrace(stackNode *node) {
 void solvePuzzle(gameState Initial, gameState Goal) {
     stackNode Stack[MAXDEPTH];
     stackNode Visited[MAXVISITEDSIZE]; // array
-    stackNode Node, visitedNode;
+    stackNode Node;
 
     // EnStack Initial State
     Node.State = Initial;
@@ -98,8 +98,6 @@ void solvePuzzle(gameState Initial, gameState Goal) {
 
     // Iteration over Stack
     printf("\n");
-    int counter=0;
-    int temp;
     while (!isStackFull(Stack) && !isVisitedFull(Visited) && !isStackEmpty(Stack)) { // Added condition to avoid overflow
         printProgressBar(Rear+1, MAXDEPTH, vIndex, MAXVISITEDSIZE,10000);
         // Pop from the Stack
