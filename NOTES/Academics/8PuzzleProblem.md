@@ -14,4 +14,4 @@
 - ## **🤖 **Algorithms Used****:
     1. ### 🔄 [Breadth First Search (BFS)](./8PuzzleProblemBFS.md)
     2. ### 🌲 [Depth First Search (DFS)](./8PuzzleProblemDFS.md)
-    3. ### ⭐ [A* Search ](./8PuzzleProblemAstar.md) 
+    3. ### ⭐ [Iterative Deepening Search (IDS)](./8PuzzleProblemIDS.md) 
