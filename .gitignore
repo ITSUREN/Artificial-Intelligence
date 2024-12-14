@@ -1,6 +1,6 @@
-#to hide the sensitive things in environment
-.env
-#To ingnore the harvard class recordings
-/Classes
-.vscode
-/venv
+# Ignore all files without an extension
+*
+!*.*
+
+# Ignore the .vscode Folder
+.vscode/
