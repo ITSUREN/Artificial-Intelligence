@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <unistd.h>
-#include "../Modules/8PuzzleModules.c"
+#include "../../Modules/8PuzzleModules.c"
 
 #define MAXVISITEDSIZE 10000 
 #define MAXDEPTH 20 // Size of Stack
@@ -89,64 +89,70 @@ void solvePuzzle(gameState Initial, gameState Goal) {
     stackNode Visited[MAXVISITEDSIZE]; // array
     stackNode Node;
 
-    // EnStack Initial State
-    Node.State = Initial;
-    Node.Previous = NULL;
-    Node.Depth = 0;
-    Node.Move = "Initial State Inclusion"; // Initial state has no move
-    pushStack(Stack, Node);
-
     // Iteration over Stack
     printf("\n");
-    while (!isStackFull(Stack) && !isVisitedFull(Visited) && !isStackEmpty(Stack)) { // Added condition to avoid overflow
-        printProgressBar(Rear+1, MAXDEPTH, vIndex, MAXVISITEDSIZE,10000);
-        // Pop from the Stack
-        Node = popStack(Stack);
-        int holdParentDepth = Node.Depth;
-        gameState currentState = Node.State;
 
-        // Push to Visited
-        if(!isVisited(currentState,Visited)) {
-            pushVisited(Visited,Node);
-        }
+    for (int depth=1; depth < MAXDEPTH; depth++) { // Levels
+        // EnStack Initial State
+        Node.State = Initial;
+        Node.Previous = NULL;
+        Node.Depth = 0;
+        Node.Move = "Initial State Inclusion"; // Initial state has no move
+        pushStack(Stack, Node);
 
-        // Check if current state is the goal state
-        if (isSameState(currentState, Goal)) {
-            printHorizontalRule();
-            printf("\nBacktraced Path:\n");
-            backtrace(&Node);
-            printf("\nSolution Found at step %d\n\n", Node.Depth);
-            return;
-        }
+        //Resetting Visited Stack
+        vIndex=0;  
+        printf("\nLEVEL %d\n", depth);
+        while (!isStackFull(Stack) && !isVisitedFull(Visited) && !isStackEmpty(Stack)) { // Added condition to avoid overflow
+            printProgressBar(Rear+1, MAXDEPTH, vIndex, MAXVISITEDSIZE,10000);
+            // Pop from the Stack
+            Node = popStack(Stack);
+            int holdParentDepth = Node.Depth;
+            gameState currentState = Node.State;
 
-        // Find blank position
-        int x = currentState.Blank.row, y = currentState.Blank.column;
+            // Push to Visited
+            if(!isVisited(currentState,Visited)) {
+                pushVisited(Visited,Node);
+            }
 
-        // Possible Movements: left, right, up, down
-        int dy[] = {-1, 1, 0, 0};
-        int dx[] = {0, 0, -1, 1};
-        const char *moves[] = {"Left", "Right", "Up", "Down"};
+            // Check if current state is the goal state
+            if (isSameState(currentState, Goal)) {
+                printHorizontalRule();
+                printf("\nBacktraced Path:\n");
+                backtrace(&Node);
+                printf("\nSolution Found at step %d\n\n", Node.Depth);
+                return;
+            }
 
-        for (int i = 0; i < 4; i++) {
-            int newx = x + dx[i], newy = y + dy[i];
+            // Find blank position
+            int x = currentState.Blank.row, y = currentState.Blank.column;
 
-            if (isSafe(newx, newy) && (Node.Depth!=MAXDEPTH)) {
-                // Create a new State by moving blanks
-                gameState newState = currentState;
-                Swap(&newState.Board[x][y], &newState.Board[newx][newy]);
-                newState.Blank.row = newx;
-                newState.Blank.column = newy;
+            // Possible Movements: left, right, up, down
+            int dy[] = {-1, 1, 0, 0};
+            int dx[] = {0, 0, -1, 1};
+            const char *moves[] = {"Left", "Right", "Up", "Down"};
 
-                // Check if the state has been visited
-                if (!isVisited(newState, Visited)) {
-                    Node.State = newState;
-                    Node.Depth = holdParentDepth+1;
-                    Node.Previous = &Visited[vIndex-1];
-                    Node.Move = moves[i]; // Track the move
-                    pushStack(Stack, Node);
+            for (int i = 0; i < 4; i++) {
+                int newx = x + dx[i], newy = y + dy[i];
+
+                if (isSafe(newx, newy) && (Node.Depth!=depth)) {
+                    // Create a new State by moving blanks
+                    gameState newState = currentState;
+                    Swap(&newState.Board[x][y], &newState.Board[newx][newy]);
+                    newState.Blank.row = newx;
+                    newState.Blank.column = newy;
+
+                    // Check if the state has been visited
+                    if (!isVisited(newState, Visited)) {
+                        Node.State = newState;
+                        Node.Depth = holdParentDepth+1;
+                        Node.Previous = &Visited[vIndex-1];
+                        Node.Move = moves[i]; // Track the move
+                        pushStack(Stack, Node);
+                    }
                 }
             }
-        }
+        }        
     }
     // No solution found within limits
     printf("\n>>>[ERR 1XX] Solution Not Found within Step Limits.\n\n");

@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <unistd.h>
-#include "../Modules/8PuzzleModules.c"
+#include "../../Modules/8PuzzleModules.c"
 
 // Not many benefits to split queue and visited memory unless the problem has step > ~17 steps
 #define MAXNODES 50000 
