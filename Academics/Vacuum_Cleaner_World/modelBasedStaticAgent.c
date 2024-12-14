@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
+#include <stdlib.h>
 
 typedef enum {
     A,
@@ -9,55 +11,110 @@ typedef enum {
 typedef enum {
     DIRTY,
     CLEAN,
-    UNKNOWN
+    UNKNOWN,
+    PROBABLY_DIRTY,
+    PROBABLY_CLEAN
 } RoomState;
 
 typedef struct {
     Room currentRoom;
-    RoomState model[2]; // model[0] = Room A, model[1] = Room B
+    RoomState model[2];       // model[0] = Room A, model[1] = Room B
+    int dirtyCount[2];        // Count of times each room was perceived as DIRTY
+    int totalObservations[2]; // Total observations for each room
 } ModelBasedAgent;
 
-ModelBasedAgent agent = {A, {UNKNOWN, UNKNOWN}};
-RoomState environment[] = {DIRTY, CLEAN};
+ModelBasedAgent agent = {A, {UNKNOWN, UNKNOWN}, {0, 0}, {0, 0}};
+RoomState environment[] = {DIRTY, DIRTY};
 
-void modelInstancePrinter() {
+const char * translator(RoomState states) {
+    if (states == DIRTY) return ("DIRTY,");
+    else if (states == CLEAN) return ("CLEAN,");
+    else if (states == PROBABLY_DIRTY) return ("PROBABLY_DIRTY,");
+    else if (states == PROBABLY_CLEAN) return ("PROBABLY_CLEAN,");
+    else return("UNKNOWN,");
+}
+
+// Print model states
+void printModel() {
     printf("\nModel: [");
     for (int i = 0; i < 2; i++) {
-        if (agent.model[i] == DIRTY) printf("DIRTY,");
-        else if (agent.model[i] == CLEAN) printf("CLEAN,");
-        else printf("UNKN,");
+        printf("%s",translator(agent.model[i]));
     }
-    printf("\b \b]");
+    printf("\b \b] Env: [");
+    for (int i = 0; i < 2; i++) {
+        printf("%s", translator(environment[i]));
+    }
+    printf("\b \b] ");
+    //printf("dirty: %d, %d total: %d, %d, probab: %f, %f", agent.dirtyCount[0], agent.dirtyCount[1], agent.totalObservations[0], agent.totalObservations[1],(double)agent.dirtyCount[0] / agent.totalObservations[0], (double)agent.dirtyCount[1] / agent.totalObservations[1]);
 }
 
+// Perceive the environment
 void perceive(Room room) {
-    agent.model[room] = environment[room];
+    RoomState currentState = environment[room];
+    if (currentState == DIRTY) agent.dirtyCount[room]++;
+    agent.totalObservations[room]++;
+    agent.model[room] = currentState; // Update model with actual percept
 }
 
-void act() { //condition action rules + What action I shoudl do now.
+// Deduce state probabilities and update the model
+void deduceState(Room room) {
+    for (int i = 0; i < 2; i++) {
+        if (i!=room) {
+            if (agent.totalObservations[i] > 0) {
+                double probabilityDirty = (double)agent.dirtyCount[i] / agent.totalObservations[i];
+                if (probabilityDirty > 0.5) {
+                    agent.model[i] = PROBABLY_DIRTY;
+                } else if (probabilityDirty < 0.35) {
+                    agent.model[i] = PROBABLY_CLEAN;
+                } else {
+                    agent.model[i] = UNKNOWN;
+                }
+            }
+        }
+    }
+}
+
+// Check if all rooms are clean or probably clean
+int allRoomsClean() {
+    for (int i = 0; i < 2; i++) {
+        if (agent.model[i] == DIRTY || agent.model[i] == PROBABLY_DIRTY || agent.model[i]==UNKNOWN) {
+            return 0; // At least one room is dirty
+        }
+    }
+    return 1; // All rooms clean
+}
+
+// Act based on the model
+void act() {
     if (agent.model[agent.currentRoom] == DIRTY) {
-        printf("\nRoom %c: Action - clean", agent.currentRoom == A ? 'A' : 'B');
-        agent.model[agent.currentRoom] = CLEAN; // Update model
-        environment[agent.currentRoom] = CLEAN; // Update environment
+        printf("\nAction: Clean room %c", agent.currentRoom == A ? 'A' : 'B');
+        agent.model[agent.currentRoom] = CLEAN;
+        environment[agent.currentRoom] = CLEAN;
     } else {
         agent.currentRoom = (agent.currentRoom == A) ? B : A;
-        printf("\nRoom %c: Action - move", agent.currentRoom == A ? 'A' : 'B');
+        printf("\nAction: Move to room %c", agent.currentRoom == A ? 'A' : 'B');
     }
 }
 
+// Main function
 int main() {
+    system("clear");
     // print the environment state
     printf("Initial state: Room A = %s, Room B = %s", 
         environment[0] == DIRTY ? "DIRTY" : "CLEAN",
         environment[1] == DIRTY ? "DIRTY" : "CLEAN"
     );
-    //print initial model 
-    modelInstancePrinter();
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 10000; i++) {
         perceive(agent.currentRoom);
-        modelInstancePrinter();
+        deduceState(agent.currentRoom);
+        printModel();
+        
+        if (allRoomsClean()) {
+            printf("\nAction: Stop - All rooms clean\n");
+            break;
+        }
+        
         act();
     }
-    printf("\nAgent simulation complete.\n");
     return 0;
 }
