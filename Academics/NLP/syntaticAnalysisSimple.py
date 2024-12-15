@@ -1,4 +1,5 @@
 import nltk
+#nltk.download('punkt')
 from nltk import CFG
 
 # Updated grammar to handle adjectives and copula verbs
