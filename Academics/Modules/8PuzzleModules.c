@@ -14,6 +14,10 @@
 #define STDLIB_H
     #include <stdlib.h>
 #endif
+#ifndef UNISTD_H
+#define UNISTD_H
+    #include <unistd.h>
+#endif
 #include "./smallComponents.c"
 
 // {FOR DEBUGGING] External declaration of debugFile
@@ -38,6 +42,13 @@ bool isSameState(gameState State1, gameState State2) {
 
 bool isSafe(int x, int y) {
     return ((x >=0 && x<N) && (y >=0 && y < N));
+}
+
+const char *printPosix(Posix p) {
+    // Static buffer to hold the result string
+    static char buffer[50]; // Adjust size as needed
+    snprintf(buffer, sizeof(buffer), "(%d,%d)", p.row, p.column);
+    return buffer;
 }
 
 // [EXPERIMENTAL] Hash function to create a unique value for each state 
