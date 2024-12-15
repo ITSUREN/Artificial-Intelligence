@@ -23,7 +23,7 @@ char translator(blocks block) {
 int calculateHeuristic(State *current, blocks *goal) {
     int misplaced = 0;
     for (int i = 0; i < STACKS; i++) {
-        for (int j = 1; j < current->heights[i]; j++) {
+        for (int j = 1; j < current->heights[i]; j++) { // Lowest block is always 0 no matter what
             if (current->stacks[i][j] != goal[j]) {
                 misplaced=misplaced-j;
             } else {
