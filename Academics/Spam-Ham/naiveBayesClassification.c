@@ -60,23 +60,20 @@ int findWordIndex(WordCount *words, int wordCount, const char *word) {
     return -1;
 }
 
+void miniPrintClassData(ClassData *class) {
+    printf("\n\tWORDS: ");
+    for (int i = 0; i < class->totalWords; i++) {
+        printf("%s (%d), ", class->words[i].word, class->words[i].count);
+    }
+    printf("\n\tTotal Words: %d, Total Emails: %d", class->totalWords, class->emailCount);
+}
+
 void printClassData(ClassData *spamData, ClassData *hamData) {
-    ClassData *classa = spamData;
-
     printf("\n> Spam Data: ");
-    printf("\n\tWORDS: ");
-    for (int i = 0; i < classa->totalWords; i++) {
-        printf("%s (%d), ", classa->words[i].word, classa->words[i].count);
-    }
-    printf("\n\tTotal Words: %d, Total Emails: %d", classa->totalWords, classa->emailCount);
-
-    classa = hamData;
+    miniPrintClassData(spamData);
     printf("\n> Ham Data: ");
-    printf("\n\tWORDS: ");
-    for (int i = 0; i < classa->totalWords; i++) {
-        printf("%s (%d), ", classa->words[i].word, classa->words[i].count);
-    }
-    printf("\n\tTotal Words: %d, Total Emails: %d\n", classa->totalWords, classa->emailCount);
+    miniPrintClassData(hamData);
+    printf("\n-------------------------------------------------------------------------");
 }
 
 
@@ -103,10 +100,11 @@ void trainNaiveBayes(char emails[MAX_EMAILS][MAX_WORDS * MAX_WORD_LENGTH], char 
     }
 }
 
-double calculateWordProbability(const char *word, ClassData *classData, int vocabSize) {
+double calculateEachWordProbability(const char *word, ClassData *classData) {
     int index = findWordIndex(classData->words, classData->totalWords, word);
     int wordCount = (index != -1) ? classData->words[index].count : 0;
-    return (wordCount + 1.0) / (classData->totalWords + vocabSize);
+    //printf("\n word: %s word count: %d, total emails: %dprob: %f", word, wordCount, classData->emailCount,((double)wordCount / classData->emailCount));
+    return ((double)wordCount / classData->emailCount);
 }
 
 double calculateClassProbability(char *email, ClassData *classData, ClassData *otherClassData) {
@@ -115,20 +113,21 @@ double calculateClassProbability(char *email, ClassData *classData, ClassData *o
     toLowerCase(email);
     tokenize(email, words, &wordCount);
 
-    int vocabSize = classData->totalWords + otherClassData->totalWords;
-    double logProb = log((double)classData->emailCount / (classData->emailCount + otherClassData->emailCount));
+    double classProb = (double)classData->emailCount / (classData->emailCount + otherClassData->emailCount);
+    double priorWordProb = 1;
+
 
     for (int i = 0; i < wordCount; i++) {
-        double wordProb = calculateWordProbability(words[i], classData, vocabSize);
-        logProb += log(wordProb);
+        double wordProb = calculateEachWordProbability(words[i], classData);
+        priorWordProb*=wordProb;
     }
-
-    return logProb;
+    return classProb*priorWordProb;
 }
 
 const char* classifyEmail(char *email, ClassData *spamData, ClassData *hamData) {
     double spamProb = calculateClassProbability(email, spamData, hamData);
     double hamProb = calculateClassProbability(email, hamData, spamData);
+    printf("Probabilities: %f(Spam) & %f(Ham)", spamProb, hamProb);
 
     return (spamProb > hamProb) ? "spam" : "ham";
 }
@@ -157,11 +156,12 @@ int main() {
     ClassData hamData = {0};
 
     trainNaiveBayes(emails, classifications, emailCount, &spamData, &hamData);
+    system("clear");
     printClassData(&spamData,&hamData);
 
     char email[MAX_WORDS * MAX_WORD_LENGTH];
     while (1) {
-        printf("Enter an email to classify (or type 'exit' to quit): ");
+        printf("\nEnter an email to classify (or type 'exit' to quit): ");
         fgets(email, sizeof(email), stdin);
         email[strcspn(email, "\n")] = '\0';
 
@@ -170,7 +170,7 @@ int main() {
         }
 
         const char *classification = classifyEmail(email, &spamData, &hamData);
-        printf("The email is classified as: %s\n", classification);
+        printf("\nThe email is classified as: %s\n", classification);
     }
 
     return 0;
